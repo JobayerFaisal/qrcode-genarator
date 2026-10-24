@@ -55,6 +55,8 @@
   .fit{margin-top:10px;font-size:13px}
   .tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
   input[type=file]{display:none}
+  .foot{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);text-align:center;color:var(--mut);font-size:13px;line-height:1.7}
+  .foot b{color:var(--ink)} .foot a{color:inherit} .foot .cr{font-size:12px;opacity:.85}
 </style>
 </head>
 <body>
@@ -65,8 +67,8 @@
   <div class="card">
     <h2><span class="n">1</span> সিরিয়াল রেঞ্জ <small>Serial range</small></h2>
     <div class="grid">
-      <div><label for="from">শুরু <small>From</small></label><input type="text" id="from" inputmode="numeric" value="654598"></div>
-      <div><label for="to">শেষ <small>To</small></label><input type="text" id="to" inputmode="numeric" value="754597"></div>
+      <div><label for="from">শুরু <small>From</small></label><input type="text" id="from" inputmode="numeric" value="100001"></div>
+      <div><label for="to">শেষ <small>To</small></label><input type="text" id="to" inputmode="numeric" value="200001"></div>
       <div><label for="per">প্রতি অংশে QR সংখ্যা <small>QR per part</small></label>
         <select id="per"><option>250</option><option>500</option><option selected>1000</option><option>2500</option><option>5000</option></select></div>
       <div><label for="note">কাজের নাম / নোট <small>for the log</small></label><input type="text" id="note" placeholder="যেমন: BADC অর্ডার ১" maxlength="80"></div>
@@ -95,7 +97,7 @@
           <button type="button" class="alt sm" id="pLink">লিংক মোড</button>
         </div>
         <div class="hint">লেখা বদলাতে হলে আগে সংশ্লিষ্ট দপ্তরের অনুমোদন নিন। লিংক মোডে {serial} সহ আপনার ওয়েব ঠিকানা বসান।</div>
-        <div class="row"><label class="chk"><input type="checkbox" id="bn" checked> সিরিয়াল বাংলা অঙ্কে (৬৫৪৫৯৮)</label></div>
+        <div class="row"><label class="chk"><input type="checkbox" id="bn" checked> সিরিয়াল বাংলা অঙ্কে (১০০০০১)</label></div>
       </div>
       <div class="prev">
         <canvas id="pv" width="10" height="10"></canvas>
@@ -193,6 +195,12 @@
       <button class="alt sm" id="logClr">লগ মুছুন</button>
     </div>
   </div>
+
+  <footer class="foot">
+    <div><b>Developed by Jobayer Faisal</b></div>
+    <div>Email: <a href="mailto:jobayerfaisal.fahim@gmail.com">jobayerfaisal.fahim@gmail.com</a> · Version 1.0 · October 26</div>
+    <div class="cr">Open-source: qrcode-generator (MIT) · jsQR (Apache-2.0) · Noto Sans Bengali (SIL OFL)</div>
+  </footer>
 </div>
 
 <!-- QR encoder: qrcode-generator by Kazuhiko Arase (MIT). Decoder for the scan check: jsQR by Cosmo Wolfe (Apache-2.0). Digit shapes: Noto Sans Bengali (SIL OFL 1.1). -->
