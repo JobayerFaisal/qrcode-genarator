@@ -65,12 +65,21 @@
   <p class="sub">সিরিয়াল রেঞ্জ দিন → QR তৈরি হবে → ZIP বা প্রিন্ট PDF ডাউনলোড করুন। সবকিছু আপনার কম্পিউটারেই তৈরি হয়, কোনো ডেটা কোথাও যায় না। সেটিং আপনা-আপনি মনে থাকে।</p>
 
   <div class="card">
+    <h2>রেডি স্টাইল <small>Ready-made style</small></h2>
+    <div class="row" style="margin-top:0">
+      <button type="button" class="alt" id="styRC">নতুন স্টাইল: RC লেবেল (৭২.১×৩৫ মিমি, ২টি পাশাপাশি)</button>
+      <button type="button" class="alt" id="styBADC">আগের স্টাইল (BADC, A4 গ্রিড)</button>
+    </div>
+    <div class="hint">স্টাইল বাছলে লেখা, QR-এর আকার ও লেআউট একসাথে বদলে যায়; সিরিয়াল রেঞ্জ বদলায় না — নিচে নিজে দিন।</div>
+  </div>
+
+  <div class="card">
     <h2><span class="n">1</span> সিরিয়াল রেঞ্জ <small>Serial range</small></h2>
     <div class="grid">
       <div><label for="from">শুরু <small>From</small></label><input type="text" id="from" inputmode="numeric" value="100001"></div>
       <div><label for="to">শেষ <small>To</small></label><input type="text" id="to" inputmode="numeric" value="200001"></div>
       <div><label for="per">প্রতি অংশে QR সংখ্যা <small>QR per part</small></label>
-        <select id="per"><option>250</option><option>500</option><option selected>1000</option><option>2500</option><option>5000</option></select></div>
+        <select id="per"><option>100</option><option>250</option><option>500</option><option selected>1000</option><option>2500</option><option>5000</option></select></div>
       <div><label for="note">কাজের নাম / নোট <small>for the log</small></label><input type="text" id="note" placeholder="যেমন: BADC অর্ডার ১" maxlength="80"></div>
     </div>
     <div class="hint" id="rangeInfo"></div>
@@ -114,6 +123,7 @@
         <select id="dpi"><option>150</option><option selected>300</option><option>600</option></select></div>
       <div><label for="ec">ত্রুটি সংশোধন <small>Error correction</small></label>
         <select id="ec"><option value="L" selected>L – ছোট QR (সুপারিশকৃত)</option><option value="M">M – মাঝারি</option><option value="Q">Q – বড়</option><option value="H">H – সবচেয়ে বড়</option></select></div>
+      <div><label for="qz">সাদা মার্জিন (ডট) <small>quiet zone</small></label><input type="number" id="qz" value="4" min="1" max="8" step="1"></div>
       <div><label for="mode">PDF লেআউট <small>PDF layout</small></label>
         <select id="mode">
           <option value="a4" selected>A4 গ্রিড (ঘন করে সাজানো)</option>
@@ -148,8 +158,9 @@
       <div><label for="offY">প্রিন্ট সরানো — নিচে (মিমি) <small>Y offset</small></label><input type="number" id="offY" value="0" step="0.1"></div>
     </div>
     <div class="row">
+      <label class="chk"><input type="checkbox" id="eci"> UTF-8 চিহ্ন (ECI) — সাধারণত লাগে না; কোনো ফোনে বাংলা ভাঙা দেখালে চালু করুন</label>
       <label class="chk"><input type="checkbox" id="cap" checked> PDF-এ QR-এর নিচে সিরিয়াল নম্বর ছাপুন</label>
-      <label class="chk" data-keep="a4"><input type="checkbox" id="cut" checked> কাটার হালকা দাগ (শুধু A4 গ্রিডে)</label>
+      <label class="chk" data-keep="a4"><input type="checkbox" id="cut" checked> কাটার হালকা দাগ (QR-এর চারপাশে)</label>
     </div>
     <div class="fit" id="fit"></div>
     <div class="tools">
@@ -608,6 +619,9 @@ var qrcode = function() {
         break;
       case 'Kanji' :
         newData = qrKanji(data);
+        break;
+      case 'ECI' :
+        newData = qrECI(data);
         break;
       default :
         throw 'mode:' + mode;
@@ -1179,6 +1193,7 @@ var qrcode = function() {
     };
 
     _this.getLengthInBits = function(mode, type) {
+      if (mode === 7) return 0; // ECI has no length field
 
       if (1 <= type && type < 10) {
 
@@ -1930,6 +1945,14 @@ var qrcode = function() {
   //---------------------------------------------------------------------
   // qr8BitByte
   //---------------------------------------------------------------------
+
+  var qrECI = function(n) {
+    var _this = {};
+    _this.getMode = function() { return 7; };
+    _this.getLength = function() { return 0; };
+    _this.write = function(buffer) { if (n < 128) buffer.put(n, 8); else throw 'eci:' + n; };
+    return _this;
+  };
 
   var qr8BitByte = function(data) {
 
@@ -12617,8 +12640,9 @@ function payloadOf(tpl, bn, n) { return tpl.split('{serial}').join(bn ? toBnDigi
 
 qrcode.stringToBytes = function (s) { return Array.from(new TextEncoder().encode(s)); };
 
-function makeMatrix(text, ec) {
+function makeMatrix(text, ec, eci) {
   var q = qrcode(0, ec);
+  if (eci) q.addData(26, 'ECI');          // ECI 26 = UTF-8, so every scanner shows Bengali correctly
   q.addData(text, 'Byte');
   q.make();
   var n = q.getModuleCount(), m = new Uint8Array(n * n);
@@ -12673,7 +12697,8 @@ function verifyMatrix(mat, text) {    // independent decoder (jsQR) reads our ow
   return !!res && res.data === text;
 }
 async function processOne(op, n, P) {
-  var text = payloadOf(P.tpl, P.bn, n), mat = makeMatrix(text, P.ec), v = null;
+  if (P.qz) BORDER = P.qz;
+  var text = payloadOf(P.tpl, P.bn, n), mat = makeMatrix(text, P.ec, P.eci), v = null;
   if (P.verify === 'all' || (P.verify === 'sample' && (n === P.vfirst || n === P.vlast || (n - P.vfirst) % 25 === 0))) v = verifyMatrix(mat, text);
   if (op === 'png') return { n: n, v: v, bytes: await pngBytes(mat, P.scale) };
   if (op === 'svg') return { n: n, v: v, bytes: new TextEncoder().encode(svgOf(mat, P.mm)) };
@@ -12699,7 +12724,7 @@ const f3 = v => (Math.round(v * 1000) / 1000).toString();
 const f5 = v => (Math.round(v * 100000) / 100000).toString();
 
 /* ================= settings ================= */
-const IDS = ['from', 'to', 'per', 'note', 'tpl', 'bn', 'mm', 'dpi', 'ec', 'mode', 'gap', 'pgPreset', 'pgW', 'pgH', 'cols', 'rows', 'lw', 'lh', 'mL', 'mT', 'gX', 'gY', 'rW', 'rH', 'offX', 'offY', 'cap', 'cut', 'verify'];
+const IDS = ['from', 'to', 'per', 'note', 'tpl', 'bn', 'mm', 'dpi', 'ec', 'mode', 'gap', 'pgPreset', 'pgW', 'pgH', 'cols', 'rows', 'lw', 'lh', 'mL', 'mT', 'gX', 'gY', 'rW', 'rH', 'offX', 'offY', 'cap', 'cut', 'verify', 'qz', 'eci'];
 const DEFAULTS = {};
 IDS.forEach(id => { const e = $(id); DEFAULTS[id] = e.type === 'checkbox' ? e.checked : e.value; });
 function saveSettings() {
@@ -12717,7 +12742,7 @@ function loadSettings() {
 const num = (id, d) => { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
 const readInt = id => { const v = fromBn($(id).value).replace(/[^\d]/g, ''); return v === '' ? NaN : parseInt(v, 10); };
 function settings() {
-  return {
+  const S = {
     from: readInt('from'), to: readInt('to'), per: parseInt($('per').value, 10), note: $('note').value.trim(),
     tpl: $('tpl').value.replace(/\r/g, ''), bn: $('bn').checked,
     mm: Math.max(10, num('mm', 45)), dpi: parseInt($('dpi').value, 10), ec: $('ec').value, mode: $('mode').value,
@@ -12725,8 +12750,11 @@ function settings() {
     cols: Math.max(1, Math.round(num('cols', 1))), rows: Math.max(1, Math.round(num('rows', 1))),
     lw: num('lw', 50), lh: num('lh', 50), mL: num('mL', 0), mT: num('mT', 0), gX: num('gX', 0), gY: num('gY', 0),
     rW: num('rW', 50), rH: num('rH', 55), offX: num('offX', 0), offY: num('offY', 0),
-    cap: $('cap').checked, cut: $('cut').checked, verify: $('verify').value
+    cap: $('cap').checked, cut: $('cut').checked, verify: $('verify').value,
+    qz: Math.min(8, Math.max(1, Math.round(num('qz', 4)))), eci: $('eci').checked
   };
+  BORDER = S.qz;
+  return S;
 }
 function validate(S) {
   if (!isFinite(S.from) || !isFinite(S.to)) return 'শুরু ও শেষ সিরিয়াল সংখ্যায় লিখুন।';
@@ -12764,11 +12792,14 @@ function pdfPlan(S) {
 function fitCheck(S) {
   const plan = pdfPlan(S);
   if (S.mode === 'a4') return { ok: S.mm <= 190, text: S.mm <= 190 ? 'A4 পেজে ' + plan.cells.length + 'টি QR ধরবে।' : 'QR A4 পেজের চেয়ে বড়।' };
-  const c = plan.cells[0], lastC = plan.cells[plan.cells.length - 1];
+  const c = plan.cells[0];
   if (S.mm > c.w + 0.01 || plan.blockH > c.h + 0.01)
     return { ok: false, text: 'লেবেলে QR ধরছে না — QR ' + S.mm + ' মিমি' + (S.cap ? ' + সিরিয়াল ৫ মিমি' : '') + ' লাগবে, লেবেল ' + c.w + '×' + c.h + ' মিমি। QR-এর আকার কমান বা সিরিয়াল ক্যাপশন বন্ধ করুন।' };
-  if (S.mode === 'sheet' && (lastC.x + lastC.w > plan.pw + 0.5 || lastC.y + lastC.h > plan.ph + 0.5))
-    return { ok: false, text: 'লেবেলের গ্রিড পেজের বাইরে চলে যাচ্ছে — কলাম/সারি, মার্জিন বা লেবেলের মাপ ঠিক করুন।' };
+  for (const cl of plan.cells) {
+    const qx = cl.x + (cl.w - S.mm) / 2 + S.offX, qy = cl.y + (cl.h - plan.blockH) / 2 + S.offY;
+    if (qx < -0.05 || qy < -0.05 || qx + S.mm > plan.pw + 0.05 || qy + plan.blockH > plan.ph + 0.05)
+      return { ok: false, text: 'QR পেজের বাইরে চলে যাচ্ছে — কলাম/সারি, মার্জিন, পেজের মাপ বা "প্রিন্ট সরানো" ঠিক করুন।' };
+  }
   return { ok: true, text: '✓ প্রতি পেজে ' + plan.cells.length + 'টি লেবেল; QR লেবেলের মাঝখানে বসবে।' };
 }
 
@@ -12834,7 +12865,7 @@ async function pdfFrom(res, S, opts) {
     const qx = cell.x + (cell.w - S.mm) / 2 + S.offX, qy = cell.y + (cell.h - plan.blockH) / 2 + S.offY;
     const X = qx * PT, Y = (plan.ph - qy - S.mm) * PT;
     if (opts.outline) cur += 'q 0.85 0.2 0.2 RG 0.4 w ' + f3((cell.x + S.offX) * PT) + ' ' + f3((plan.ph - cell.y - S.offY - cell.h) * PT) + ' ' + f3(cell.w * PT) + ' ' + f3(cell.h * PT) + ' re S Q\n';
-    if (S.cut && S.mode === 'a4') cur += 'q 0.78 G 0.3 w ' + f3(X) + ' ' + f3(Y) + ' ' + f3(S.mm * PT) + ' ' + f3(S.mm * PT) + ' re S Q\n';
+    if (S.cut) { const e = 0.8 * PT; cur += 'q 0.78 G 0.3 w ' + f3(X - e) + ' ' + f3(Y - e) + ' ' + f3(S.mm * PT + 2 * e) + ' ' + f3(S.mm * PT + 2 * e) + ' re S Q\n'; }   // 0.8 mm outside the QR so it never touches the quiet zone
     cur += 'q ' + f5(mod) + ' 0 0 ' + f5(mod) + ' ' + f3(X + BORDER * mod) + ' ' + f3(Y + BORDER * mod) + ' cm\n' + r.s + 'f Q\n';
     if (S.cap) cur += captionOps(r.n, X, Y, S);
     pages[pages.length - 1] += cur;
@@ -12928,8 +12959,8 @@ async function runOp(op, serials, P, progress) {
   return localRun(op, serials, P, progress);
 }
 function paramsFor(S, a, b) {
-  const m0 = makeMatrix(payloadOf(S.tpl, S.bn, a), S.ec);
-  return { tpl: S.tpl, bn: S.bn, ec: S.ec, mm: S.mm, scale: pngScaleFor(S, m0.n), verify: S.verify, vfirst: a, vlast: b };
+  const m0 = makeMatrix(payloadOf(S.tpl, S.bn, a), S.ec, S.eci);
+  return { tpl: S.tpl, bn: S.bn, ec: S.ec, eci: S.eci, qz: S.qz, mm: S.mm, scale: pngScaleFor(S, m0.n), verify: S.verify, vfirst: a, vlast: b };
 }
 function verifySummary(res) {
   const t = res.filter(r => r.v !== null && r.v !== undefined);
@@ -12999,12 +13030,11 @@ function refresh() {
   $('rangeErr').textContent = err;
   // layout fields
   document.querySelectorAll('[data-mode]').forEach(el => el.classList.toggle('on', el.dataset.mode === S.mode));
-  $('cut').disabled = S.mode !== 'a4';
   const fit = fitCheck(S); $('fit').innerHTML = '<span class="pill ' + (fit.ok ? 'ok' : 'bad') + '">' + esc(fit.text) + '</span>';
   // preview
   const sample = isFinite(S.from) ? S.from : 1;
   let mat = null; sampleOk = false;
-  try { mat = makeMatrix(payloadOf(S.tpl, S.bn, sample), S.ec); sampleOk = true; } catch (e) { $('stat').innerHTML = '<span class="pill bad">লেখা অনেক বড় — QR-এ ধরবে না</span>'; }
+  try { mat = makeMatrix(payloadOf(S.tpl, S.bn, sample), S.ec, S.eci); sampleOk = true; } catch (e) { $('stat').innerHTML = '<span class="pill bad">লেখা অনেক বড় — QR-এ ধরবে না</span>'; }
   if (mat) {
     const t = mat.n + 2 * BORDER, c = $('pv');
     c.width = c.height = t * 4;
@@ -13012,9 +13042,10 @@ function refresh() {
     for (const [cx, cy, w] of runsOf(mat)) x.fillRect((cx + BORDER) * 4, (cy + BORDER) * 4, w * 4, 4);
     const modMM = S.mm / t, ver = (mat.n - 17) / 4, px = t * pngScaleFor(S, mat.n);
     let cls = 'ok', msg = 'স্ক্যানের জন্য ভালো';
-    if (modMM < 0.4) { cls = 'bad'; msg = 'খুব ছোট — স্ক্যান হবে না, আকার বাড়ান'; }
-    else if (modMM < 0.5) { cls = 'warn'; msg = 'ঝুঁকিপূর্ণ — আকার বাড়ানো ভালো'; }
-    $('stat').innerHTML = 'QR ভার্সন <b>' + ver + '</b> (' + mat.n + '×' + mat.n + ' ডট)<br>প্রতি ডট <b>' + modMM.toFixed(2) + ' মিমি</b> <span class="pill ' + cls + '">' + msg + '</span><br>ন্যূনতম সুপারিশকৃত আকার: <b>' + Math.ceil(t * 0.5) + ' মিমি</b><br>PNG: ' + px + '×' + px + ' পিক্সেল';
+    if (modMM < 0.28) { cls = 'bad'; msg = 'খুব ছোট — স্ক্যান হবে না, আকার বাড়ান'; }
+    else if (modMM < 0.35) { cls = 'warn'; msg = 'অনেক ছোট — ৬০০ dpi প্রিন্টার লাগবে, আগে ফোনে পরীক্ষা করুন'; }
+    else if (modMM < 0.5) { cls = 'warn'; msg = 'ছোট — ভালো প্রিন্টে ফোনে পরীক্ষা করে নিন'; }
+    $('stat').innerHTML = 'QR ভার্সন <b>' + ver + '</b> (' + mat.n + '×' + mat.n + ' ডট)<br>প্রতি ডট <b>' + modMM.toFixed(2) + ' মিমি</b> <span class="pill ' + cls + '">' + msg + '</span><br>প্রিন্টার পিক্সেল প্রতি ডটে: ৩০০dpi → ' + (modMM / 25.4 * 300).toFixed(1) + ' · ৬০০dpi → ' + (modMM / 25.4 * 600).toFixed(1) + ' (পূর্ণসংখ্যার কাছাকাছি হলে ভালো)<br>নিরাপদ আকার (০.৫ মিমি/ডট): <b>' + Math.ceil(t * 0.5) + ' মিমি</b><br>PNG: ' + px + '×' + px + ' পিক্সেল';
   }
   // overlap warning
   let ov = '';
@@ -13141,6 +13172,16 @@ $('testPdf').addEventListener('click', () => {
   });
 });
 $('resetAll').addEventListener('click', () => { if (confirm('সব সেটিং ডিফল্টে ফিরবে (লগ মুছবে না)। ঠিক আছে?')) { try { localStorage.removeItem('qrgen.settings'); } catch (e) {} location.reload(); } });
+
+/* ready-made styles */
+const RC_TPL = "বাংলাদেশ কৃষি উন্নয়ন কর্পোরেশন (বিএডিসি) \n                        কৃষি মন্ত্রণালয় \n\nক্রমিক নং                 : RC {serial}\nবীজের শ্রেণি             : প্রত্যয়িত\n\nবীজের উৎপাদন বর্ষ : ২০২৫-২০২৬";
+const RC_STYLE = { tpl: RC_TPL, bn: true, ec: 'Q', eci: false, qz: 2, mm: 30, mode: 'sheet', pgPreset: '', pgW: 72.1, pgH: 35, cols: 2, rows: 1, lw: 35, lh: 35, mL: 0, mT: 0, gX: 2.94, gY: 0, offX: 0.03, offY: -0.5, cap: false, cut: false, per: '100' };
+function applyStyle(o) {
+  for (const id in o) { const e = $(id); if (e.type === 'checkbox') e.checked = !!o[id]; else e.value = o[id]; }
+  schedule();
+}
+$('styRC').addEventListener('click', () => applyStyle(RC_STYLE));
+$('styBADC').addEventListener('click', () => { const o = {}; IDS.forEach(id => { if (!['from', 'to', 'note', 'verify'].includes(id)) o[id] = DEFAULTS[id]; }); applyStyle(o); });
 
 /* text presets */
 const FULL = $('tpl').value;
