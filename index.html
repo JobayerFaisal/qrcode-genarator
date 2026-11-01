@@ -89,14 +89,17 @@
     <h2><span class="n">2</span> QR-এর ভেতরের লেখা <small>Text inside QR</small></h2>
     <div class="two">
       <div>
-        <textarea id="tpl" spellcheck="false">বাংলাদেশ কৃষি উন্নয়ন কর্পোরেশন (বিএডিসি) 
-                        কৃষি মন্ত্রণালয় 
+        <textarea id="tpl" spellcheck="false">বাংলাদেশ কৃষি উন্নয়ন কর্পোরেশন (বিএডিসি)
+                        কৃষি মন্ত্রণালয়
 
 ক্রমিক নং                 : {serial}
 বীজের শ্রেণি             : ভিত্তি
 
 বীজের উৎপাদন বর্ষ : চলতি মৌসুম 
-বিস্তারিত জানতে ই-মেইল করুন: agm.cdpcrops@gmail.com</textarea>
+
+
+বিস্তারিত জানতে ই-মেইল করুন: 
+      agm.cdpcrops@gmail.com</textarea>
         <div class="hint"><b>{serial}</b> জায়গায় অক্ষরসহ সিরিয়াল (যেমন WF ০০০০১) বসবে। বীজের শ্রেণি বদলালে এই লেখা নিজে বদলে যায়। স্পেস ও লাইন হুবহু যেমন আছে তেমন থাকবে।</div>
       </div>
       <div class="prev">
@@ -109,11 +112,16 @@
   <div class="card">
     <h2><span class="n">3</span> রোলের মাপ <small>Roll layout</small></h2>
     <div class="grid">
-      <div><label for="qr">প্রতিটি QR (মিমি) <small>বর্গাকার</small></label><input type="number" id="qr" value="35" min="10" max="100" step="0.1"></div>
-      <div><label for="gap">দুই পাশে ও মাঝে ফাঁক (মিমি)</label><input type="number" id="gap" value="2" min="0" max="20" step="0.1"></div>
-      <div><label for="ph">লেবেলের উচ্চতা (মিমি) <small>৩৫ + ২ উপরে + ২ নিচে</small></label><input type="number" id="ph" value="39" min="10" max="200" step="0.1"></div>
-      <div><label for="offX">প্রিন্ট সরানো — ডানে (মিমি)</label><input type="number" id="offX" value="0" step="0.1"></div>
-      <div><label for="offY">প্রিন্ট সরানো — নিচে (মিমি)</label><input type="number" id="offY" value="0" step="0.1"></div>
+      <div><label for="pw">মোট দৈর্ঘ্য / প্রস্থ (মিমি) <small>রোলের প্রস্থ</small></label><input type="number" id="pw" value="72.1" min="10" max="300" step="0.1"></div>
+      <div><label for="ph">মোট উচ্চতা (মিমি)</label><input type="number" id="ph" value="35" min="10" max="200" step="0.1"></div>
+      <div><label for="qw">QR দৈর্ঘ্য (মিমি)</label><input type="number" id="qw" value="30" min="10" max="100" step="0.1"></div>
+      <div><label for="qh">QR উচ্চতা (মিমি)</label><input type="number" id="qh" value="30" min="10" max="100" step="0.1"></div>
+      <div><label for="gap">দুই পাশে ফাঁক (মিমি)</label><input type="number" id="gap" value="2.085" step="0.05"></div>
+      <div><label for="gapM">মাঝে ফাঁক (মিমি)</label><input type="number" id="gapM" value="7.93" step="0.1"></div>
+      <div><label for="gapV">উপরে-নিচে ফাঁক (মিমি)</label><input type="number" id="gapV" value="2.5" step="0.1"></div>
+      <div><label for="qm">QR-এর মাপ ধরা হবে</label><select id="qm"><option value="dark">শুধু কালো অংশ (সাদা মার্জিন বাইরে)</option><option value="incl" selected>সাদা মার্জিনসহ</option></select></div>
+      <div><label for="offX">প্রিন্ট সরানো — ডানে (মিমি)</label><input type="number" id="offX" value="0.42" step="0.1"></div>
+      <div><label for="offY">প্রিন্ট সরানো — নিচে (মিমি)</label><input type="number" id="offY" value="-0.5" step="0.1"></div>
     </div>
     <div class="calc" id="calc"></div>
     <div class="hint">প্রিন্টারের সেটিংয়ে "Actual size / 100%" দিন এবং পেজের মাপ রোলের সমান রাখুন। ছাপা QR কিছুটা সরে গেলে "প্রিন্ট সরানো" দিয়ে ঠিক করুন।</div>
@@ -12637,7 +12645,7 @@ const f3 = v => (Math.round(v * 1000) / 1000).toString();
 const f5 = v => (Math.round(v * 100000) / 100000).toString();
 
 /* ================= seed types and centres (from the client's serial table) ================= */
-const BASE_TPL = "বাংলাদেশ কৃষি উন্নয়ন কর্পোরেশন (বিএডিসি) \n                        কৃষি মন্ত্রণালয় \n\nক্রমিক নং                 : {serial}\nবীজের শ্রেণি             : {class}\n\nবীজের উৎপাদন বর্ষ : চলতি মৌসুম\n\nবিস্তারিত জানতে ই-মেইল করুন: agm.cdpcrops@gmail.com ";
+const BASE_TPL = "বাংলাদেশ কৃষি উন্নয়ন কর্পোরেশন (বিএডিসি)\n                        কৃষি মন্ত্রণালয়\n\nক্রমিক নং                 : {serial}\nবীজের শ্রেণি             : {class}\n\nবীজের উৎপাদন বর্ষ : চলতি মৌসুম \n\n\nবিস্তারিত জানতে ই-মেইল করুন: \nagm.cdpcrops@gmail.com";
 const TYPES = {
   WF: { cls: 'ভিত্তি', prefix: 'WF', pad: 5, centers: [
     ['চুয়াডাঙ্গা', 1, 7000], ['দিনাজপুর', 7001, 9000], ['যশোর', 9001, 14000], ['মেহেরপুর', 14001, 24000], ['পাবনা', 24001, 26000]] },
@@ -12651,8 +12659,8 @@ const TYPES = {
 };
 
 /* ================= settings (remembered in the browser) ================= */
-const SKEY = 'qrgen.roll76b';
-const IDS = ['type', 'prefix', 'pad', 'from', 'to', 'per', 'note', 'tpl', 'qr', 'gap', 'ph', 'offX', 'offY', 'verify'];
+const SKEY = 'qrgen.roll72b';
+const IDS = ['type', 'prefix', 'pad', 'from', 'to', 'per', 'note', 'tpl', 'pw', 'ph', 'qw', 'qh', 'gap', 'gapM', 'gapV', 'qm', 'offX', 'offY', 'verify'];
 const DEFAULTS = {}; IDS.forEach(id => { DEFAULTS[id] = $(id).value; });
 function saveSettings() { try { const o = {}; IDS.forEach(id => { o[id] = $(id).value; }); o.center = $('center').value; localStorage.setItem(SKEY, JSON.stringify(o)); } catch (e) {} }
 function loadSettings() {
@@ -12665,13 +12673,13 @@ function loadSettings() {
 const num = (id, d) => { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
 const readInt = id => { const v = fromBn($(id).value).replace(/[^\d]/g, ''); return v === '' ? NaN : parseInt(v, 10); };
 function settings() {
-  const qr = Math.max(5, num('qr', 35)), gap = Math.max(0, num('gap', 2));
+  const qw = Math.max(5, num('qw', 30)), qh = Math.max(5, num('qh', 30)), qr = Math.min(qw, qh), gap = num('gap', 2.085), gapM = num('gapM', 7.93), gapV = num('gapV', 'qm', 3);
   return {
     type: $('type').value, center: $('center').value, prefix: $('prefix').value.trim(), pad: Math.max(0, Math.min(9, parseInt($('pad').value, 10) || 0)),
     from: readInt('from'), to: readInt('to'), per: parseInt($('per').value, 10), note: $('note').value.trim(),
-    tpl: $('tpl').value.replace(/\r/g, ''), qr, gap, ph: Math.max(5, num('ph', 39)),
-    offX: num('offX', 0), offY: num('offY', 0), verify: $('verify').value,
-    pw: 2 * qr + 3 * gap
+    tpl: $('tpl').value.replace(/\r/g, ''), qw, qh, qr, gap, gapM, gapV, ph: Math.max(5, num('ph', 35)),
+    offX: num('offX', 0), offY: num('offY', 0), verify: $('verify').value, qz: $('qm').value === 'incl',
+    pw: Math.max(5, num('pw', 72.1))
   };
 }
 const sn = (n, S) => serialStr(n, S.prefix, S.pad);                                   // as printed inside the QR (Bengali digits)
@@ -12682,7 +12690,8 @@ function validate(S) {
   if (S.pad > 0 && String(S.to).length > S.pad) return 'শেষ নম্বর "অঙ্ক সংখ্যা"-র চেয়ে বড় — অঙ্ক সংখ্যা বাড়ান।';
   if (S.to - S.from + 1 > 2000000) return 'একবারে সর্বোচ্চ ২০,০০,০০০ সিরিয়াল দেওয়া যাবে।';
   if (S.tpl.indexOf('{serial}') < 0) return 'লেখার মধ্যে {serial} থাকতে হবে, নাহলে সব QR একই হবে।';
-  if (S.ph < S.qr - 0.01) return 'লেবেলের উচ্চতা QR-এর চেয়ে কম — উচ্চতা বাড়ান বা QR ছোট করুন।';
+  if (S.gap < -0.01 || S.gapV < -0.01 || S.gapM < -0.01) return 'ফাঁক ঋণাত্মক হয়ে গেছে — মোট মাপ বাড়ান বা QR ছোট করুন।';
+  if (S.pw < 2 * S.qw + S.gapM - 0.01 || S.ph < S.qh - 0.01) return 'মোট মাপ QR-গুলোর জন্য যথেষ্ট নয় — মোট মাপ বাড়ান বা QR ছোট করুন।';
   return '';
 }
 function segmentsOf(S) {
@@ -12700,21 +12709,21 @@ function computeParts(S) {
 }
 const rangeOf = p => { const a = []; for (let n = p.a; n <= p.b; n++) a.push(n); return a; };
 
-/* ================= PDF: 2 QR per page, page width = 2·QR + 3·gap ================= */
+/* ================= PDF: 2 QR per page, page width = 2·QR + 2·side + middle ================= */
 async function deflate(bytes) {
   const cs = new CompressionStream('deflate'), w = cs.writable.getWriter(); w.write(bytes); w.close();
   return new Uint8Array(await new Response(cs.readable).arrayBuffer());
 }
 async function pdfFrom(res, S) {
   const pages = [], enc = new TextEncoder();
-  const qy = (S.ph - S.qr) / 2 + S.offY;                  // QR top, mm from the top of the page
+  const qy = S.gapV + (S.qh - S.qr) / 2 + S.offY;                  // QR top, mm from the top of the page
   for (let i = 0; i < res.length; i++) {
     const r = res[i], col = i % 2;
     if (col === 0) pages.push('');
-    const qx = S.gap + col * (S.qr + S.gap) + S.offX;      // QR left, mm
-    const mod = S.qr / (r.mn + 2 * BORDER) * PT;           // one dot, in pt
+    const qx = S.gap + (S.qw - S.qr) / 2 + col * (S.qw + S.gapM) + S.offX;      // QR left, mm
+    const mod = S.qr / (r.mn + (S.qz ? 2 * BORDER : 0)) * PT;           // one dot, in pt
     const X = qx * PT, Y = (S.ph - qy - S.qr) * PT;        // bottom-left of the QR square, pt
-    pages[pages.length - 1] += 'q ' + f5(mod) + ' 0 0 ' + f5(mod) + ' ' + f3(X + BORDER * mod) + ' ' + f3(Y + BORDER * mod) + ' cm\n' + r.s + 'f Q\n';
+    pages[pages.length - 1] += 'q ' + f5(mod) + ' 0 0 ' + f5(mod) + ' ' + f3(X + (S.qz ? BORDER * mod : 0)) + ' ' + f3(Y + (S.qz ? BORDER * mod : 0)) + ' cm\n' + r.s + 'f Q\n';
   }
   const out = [], offs = [];
   let off = 0;
@@ -12878,7 +12887,7 @@ let busy = false, partsList = [], urls = {}, sampleOk = false, lastErr = '', job
 function refresh() {
   const S = settings(), err = validate(S); lastErr = err;
   $('rangeErr').textContent = err;
-  $('calc').innerHTML = 'রোলের প্রস্থ = ' + S.gap + ' + ' + S.qr + ' + ' + S.gap + ' + ' + S.qr + ' + ' + S.gap + ' = <b>' + f3(S.pw) + ' মিমি</b> · পেজ <b>' + f3(S.pw) + ' × ' + f3(S.ph) + ' মিমি</b> (QR-এর উপরে-নিচে ' + f3((S.ph - S.qr) / 2) + ' মিমি), প্রতি পেজে ২টি QR';
+  $('calc').innerHTML = 'প্রস্থ = ' + f3(S.gap) + ' + ' + f3(S.qw) + ' + ' + f3(S.gapM) + ' + ' + f3(S.qw) + ' + ' + f3(S.gap) + ' · উচ্চতা = ' + f3(S.gapV) + ' + ' + f3(S.qh) + ' + ' + f3(S.gapV) + ' → পেজ <b>' + f3(S.pw) + ' × ' + f3(S.ph) + ' মিমি</b>, প্রতি পেজে ২টি QR' + (Math.abs(S.qw - S.qh) > 0.01 ? ' <span class="pill warn">QR বর্গাকার — ছোট মাপ (' + f3(S.qr) + ' মিমি) ব্যবহার হবে</span>' : '');
   // preview + stats
   const sample = isFinite(S.from) ? S.from : 1;
   let mat = null; sampleOk = false;
@@ -12888,7 +12897,7 @@ function refresh() {
     c.width = c.height = t * 4;
     const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.fillStyle = '#000';
     for (const [cx, cy, w] of runsOf(mat)) x.fillRect((cx + BORDER) * 4, (cy + BORDER) * 4, w * 4, 4);
-    const modMM = S.qr / t, ver = (mat.n - 17) / 4;
+    const modMM = S.qr / (S.qz ? t : mat.n), ver = (mat.n - 17) / 4;
     let cls = 'ok', msg = 'স্ক্যানের জন্য ভালো';
     if (modMM < 0.28) { cls = 'bad'; msg = 'খুব ছোট — স্ক্যান হবে না, QR বড় করুন'; }
     else if (modMM < 0.35) { cls = 'warn'; msg = 'অনেক ছোট — ৬০০ dpi প্রিন্টার লাগবে, আগে ফোনে পরীক্ষা করুন'; }
@@ -13010,6 +13019,15 @@ $('logClr').addEventListener('click', () => { if (confirm('পুরো ডা�
 $('type').addEventListener('change', () => { applyType(); schedule(); });
 $('center').addEventListener('change', () => { applyCenter(); schedule(); });
 ['from', 'to'].forEach(id => $(id).addEventListener('input', () => { if ($('center').value !== 'custom') $('center').value = 'custom'; }));
+const r2 = v => String(Math.round(v * 100) / 100);
+function link(id) {
+  const g = k => parseFloat($(k).value) || 0;
+  if (id === 'pw') $('gap').value = r2((g('pw') - 2 * g('qw') - g('gapM')) / 2);
+  else if (id === 'ph') $('gapV').value = r2((g('ph') - g('qh')) / 2);
+  else if (id === 'qw' || id === 'gapM' || id === 'gap') $('pw').value = r2(2 * g('gap') + 2 * g('qw') + g('gapM'));
+  else if (id === 'qh' || id === 'gapV') $('ph').value = r2(2 * g('gapV') + g('qh'));
+}
+['pw', 'ph', 'qw', 'qh', 'gap', 'gapM', 'gapV'].forEach(id => $(id).addEventListener('input', () => link(id)));
 IDS.forEach(id => { $(id).addEventListener('input', schedule); $(id).addEventListener('change', schedule); });
 loadSettings();
 if (location.hash !== '#nopool') initPool();
