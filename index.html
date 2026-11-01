@@ -12585,9 +12585,38 @@ function payloadOf(tpl, n, prefix, pad) { return tpl.split('{serial}').join(seri
 
 qrcode.stringToBytes = function (s) { return Array.from(new TextEncoder().encode(s)); };
 
+/* split text into Numeric / Alphanumeric / Byte segments (cheapest total bits), like standard QR encoders */
+var ALNUM = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:';
+function segmentsOf(text) {
+  var ch = Array.from(text), L = ch.length, INF = 1e9, M = ['Numeric', 'Alphanumeric', 'Byte'];
+  var HDR = [4 + 12, 4 + 11, 4 + 16];
+  var cost = [], from = [];
+  for (var i = 0; i < L; i++) {
+    var ok = [/[0-9]/.test(ch[i]), ALNUM.indexOf(ch[i]) >= 0, true];
+    var per = [10 / 3, 5.5, 8 * new TextEncoder().encode(ch[i]).length];
+    cost[i] = [INF, INF, INF]; from[i] = [0, 0, 0];
+    for (var m = 0; m < 3; m++) {
+      if (!ok[m]) continue;
+      if (i === 0) { cost[i][m] = HDR[m] + per[m]; continue; }
+      for (var p = 0; p < 3; p++) {
+        var v = cost[i - 1][p] + per[m] + (p === m ? 0 : HDR[m]);
+        if (v < cost[i][m]) { cost[i][m] = v; from[i][m] = p; }
+      }
+    }
+  }
+  var m = 0; for (var k = 1; k < 3; k++) if (cost[L - 1][k] < cost[L - 1][m]) m = k;
+  var modes = new Array(L);
+  for (var j = L - 1; j >= 0; j--) { modes[j] = m; m = from[j][m]; }
+  var out = [];
+  for (var t = 0; t < L; t++) {
+    if (out.length && out[out.length - 1][2] === modes[t]) out[out.length - 1][1] += ch[t];
+    else out.push([M[modes[t]], ch[t], modes[t]]);
+  }
+  return out;
+}
 function makeMatrix(text) {
-  var q = qrcode(0, EC);
-  q.addData(text, 'Byte');
+  var q = qrcode(0, EC), segs = segmentsOf(text);
+  for (var i = 0; i < segs.length; i++) q.addData(segs[i][1], segs[i][0]);
   q.make();
   var n = q.getModuleCount(), m = new Uint8Array(n * n);
   for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) m[r * n + c] = q.isDark(r, c) ? 1 : 0;
@@ -12641,7 +12670,7 @@ const f3 = v => (Math.round(v * 1000) / 1000).toString();
 const f5 = v => (Math.round(v * 100000) / 100000).toString();
 
 /* ================= seed types and centres (from the client's serial table) ================= */
-const BASE_TPL = "বাংলাদেশ কৃষি উন্নয়ন কর্পোরেশন (বিএডিসি)\n                        কৃষি মন্ত্রণালয়\n\nক্রমিক নং                 : {serial}\nবীজের শ্রেণি             : {class}\n\nবীজের উৎপাদন বর্ষ : ২০২৫-২০২৬ ;
+const BASE_TPL = "বাংলাদেশ কৃষি উন্নয়ন কর্পোরেশন (বিএডিসি)\n                        কৃষি মন্ত্রণালয়\n\nক্রমিক নং                 : {serial}\nবীজের শ্রেণি             : {class}\n\nবীজের উৎপাদন বর্ষ : ২০২৫-২০২৬";
 const TYPES = {
   WF: { cls: 'ভিত্তি', prefix: 'WF', pad: 5, centers: [
     ['চুয়াডাঙ্গা', 1, 7000], ['দিনাজপুর', 7001, 9000], ['যশোর', 9001, 14000], ['মেহেরপুর', 14001, 24000], ['পাবনা', 24001, 26000]] },
